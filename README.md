@@ -7,10 +7,23 @@
                                          |_| 
 ```
 
+# Require
+
+- smartmontools
+- privilege execution
+
 # Help
 
 ``` bash
+usage: hdd_temp.py [-h] [-d DIRECTORY] [-v]
 
+Monitoring HDD and SDD temperatures
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DIRECTORY, --directory DIRECTORY
+                        Directory where the CSV file will be save
+  -v, --version         show program's version number and exit
 ```
 
 # Licence

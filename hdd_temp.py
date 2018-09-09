@@ -23,18 +23,6 @@ import csv
 from collections import OrderedDict
 
 
-# ------------- Fonctions -------------
-def listHosts(text):
-    hostsList = []
-    regex = re.findall(r"" + regexTemp + "($|[^\d])", text, re.DOTALL)
-    if regex:
-        for addr in regex:
-            hostsList.append(addr[0])
-        return hostsList
-    else:
-        return []
-
-
 # --------------- Main ----------------
 VERSION = "1.0"
 # Regex for shell commands
@@ -63,11 +51,11 @@ for device in devices:
     cmdAttr = os.popen("/usr/sbin/smartctl -A " + device).read()
     cmdInfo = os.popen("/usr/sbin/smartctl -n standby -i " + device).read()
 
-    temperature = re.search(regexTemp, cmdAttr, re.MULTILINE).group(1)
-    mode = re.search(regexMode, cmdInfo, re.MULTILINE).group(1)
+    temperature = re.search(regexTemp, cmdAttr, re.MULTILINE)
+    mode = re.search(regexMode, cmdInfo, re.MULTILINE)
 
-    temperature = int(temperature) if temperature else "Error"
-    mode = mode if mode else "Error"
+    temperature = int(temperature.group(1)) if temperature else "Error"
+    mode = mode.group(1) if mode else "Error"
 
     # Define CSV path
     # dateFormated = date.strftime('%d-%m-%y')
