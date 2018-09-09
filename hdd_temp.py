@@ -26,7 +26,7 @@ from collections import OrderedDict
 # ------------- Fonctions -------------
 def listHosts(text):
     hostsList = []
-    regex = re.findall(r"" + regexIP + "($|[^\d])", text, re.DOTALL)
+    regex = re.findall(r"" + regexTemp + "($|[^\d])", text, re.DOTALL)
     if regex:
         for addr in regex:
             hostsList.append(addr[0])
@@ -36,14 +36,14 @@ def listHosts(text):
 
 
 # --------------- Main ----------------
-VERSION = "0.1"
-# Regex for IP address with or without CIDR
-regexIP = "^194 \w+\s+0x\d+\s+\d+\s+\d+\s+\d+\s+\w+\s+\w+\s+\S+\s+(\d+)$"
+VERSION = "1.0"
+# Regex for shell commands
+regexDevices = r"^[/a-z]+"
+regexTemp = r"^194 \w+\s+0x\d+\s+\d+\s+\d+\s+\d+\s+\w+\s+\w+\s+\S+\s+(\d+)(?:\s[\(][^)]*[\)])?$"
+regexMode = r"^(?:^Power mode is:\s+|^Device is in )(\w+)"
 
 # Parse arguments
-parser = argparse.ArgumentParser(description='Count the hosts in your local network with nbtscan and nmap',
-                                 conflict_handler='resolve')
-parser.add_argument('interface', help='Select the network interface')
+parser = argparse.ArgumentParser(description='Monitoring HDD and SDD temperatures')
 parser.add_argument('-d', '--directory', help='Directory where the CSV file will be save', default='./')
 parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
 args = parser.parse_args()
@@ -52,63 +52,46 @@ if not os.path.isdir(args.directory):
     print("Directory is not valid")
     exit(5)
 
-cmdDevices = os.popen("/usr/sbin/smartctl -n standby  --scan").read()
-regexDevices = re.search(r"^[/a-z]+", cmdDevices)
+# Find the list of all devices
+cmdDevices = os.popen("/usr/sbin/smartctl -n standby --scan").read()
+devices = re.findall(regexDevices, cmdDevices, re.MULTILINE)
 
-# Find the IP range of the selected interface
-cmdSmart = os.popen("/usr/sbin/smartctl -n standby  -A /dev/sda ").read()
-regex = re.search(regexIP, cmdSmart)
-if regex:
-    range = regex.group(1)
-else:
-    exit(6)
+# Find the mode and the temperature for each device
+for device in devices:
+    date = datetime.datetime.now()
 
-# Execute Nbt scan and Nmap scan
-dateStart = datetime.datetime.now()
-print("Start ARP scan on " + range)
-arpScan = os.popen("sudo /usr/bin/arp-scan --interface " + args.interface + " " + range).read()
-print("Start NbtScan on " + range)
-nbtScan = os.popen("/usr/bin/nbtscan " + range + " -t 1000 -q | iconv -c -t UTF-8").read()
-print("Start Nmap on " + range)
-nmap = os.popen("/usr/bin/nmap " + range + " -sP").read()
-print("End")
-dateEnd = datetime.datetime.now()
+    cmdAttr = os.popen("/usr/sbin/smartctl -A " + device).read()
+    cmdInfo = os.popen("/usr/sbin/smartctl -n standby -i " + device).read()
 
-# List the IP hosts found in scans
-hostsArpList = listHosts(arpScan)
-hostsNbtList = listHosts(nbtScan)
-hostsNmapList = listHosts(nmap)
+    temperature = re.search(regexTemp, cmdAttr, re.MULTILINE).group(1)
+    mode = re.search(regexMode, cmdInfo, re.MULTILINE).group(1)
 
-# Join the 3 lists and count the number of hosts in scans
-hostsList = hostsArpList + hostsNbtList + hostsNmapList
-nbHosts = len(list(set(hostsList)))
-nbHostsArp = len(hostsArpList)
-nbHostsNbt = len(hostsNbtList)
-nbHostsNmap = len(hostsNmapList)
+    temperature = int(temperature) if temperature else "Error"
+    mode = mode if mode else "Error"
 
-# Define CSV path
-dateFormated = dateStart.strftime('%d-%m-%y')
+    # Define CSV path
+    # dateFormated = date.strftime('%d-%m-%y')
 
-csvFilename = 'count_hosts_' + dateFormated + '.csv'
-if args.directory:
-    csvPath = args.directory + '/' + csvFilename
-else:
-    csvPath = csvFilename
+    csvFilename = 'hdd-temp_' + device.replace('/dev/', '') + '.csv'
+    if args.directory:
+        csvPath = args.directory + '/' + csvFilename
+    else:
+        csvPath = csvFilename
 
-createHeader = not os.path.exists(csvPath)
+    createHeader = not os.path.exists(csvPath)
 
-# Write the result in CSV file
-with open(csvPath, 'a') as csvFile:
-    # Add a header if it's a new file
-    if createHeader:
-        header = OrderedDict([('Start_Date', None), ('End_Date', None),
-                              ('IP_Range', None), ('Nbt_Hosts_Number', None), ('Arppro_Hosts_Number', None),
-                              ('Nmap_Hosts_Number', None), ('Total_Hosts_Number', None)])
-        dw = csv.DictWriter(csvFile, delimiter='\t', fieldnames=header)
-        dw.writeheader()
+    # Write the result in CSV file
+    with open(csvPath, 'a') as csvFile:
+        # Add a header if it's a new file
+        if createHeader:
+            header = OrderedDict([('Date', None), ('Power Mode', None), ('Temperature', None)])
+            dw = csv.DictWriter(csvFile, delimiter='\t', fieldnames=header)
+            dw.writeheader()
 
-    wr = csv.writer(csvFile, quoting=csv.QUOTE_ALL, delimiter=';')
-    wr.writerow([dateStart, dateEnd, range, nbHostsArp, nbHostsNbt, nbHostsNmap, nbHosts])
+        wr = csv.writer(csvFile, quoting=csv.QUOTE_ALL, delimiter=';')
+        wr.writerow([date, mode, temperature])
 
-print("Found " + str(nbHostsNbt) + " nbt hosts and " + str(nbHostsNmap) + " nmap hosts.")
-print("Add row in " + csvPath)
+    print("Add row in " + csvPath)
+
+
+print("Found " + str(len(devices)) + " devices.")
