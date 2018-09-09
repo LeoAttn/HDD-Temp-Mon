@@ -27,7 +27,7 @@ from collections import OrderedDict
 VERSION = "1.0"
 # Regex for shell commands
 regexDevices = r"^[/a-z]+"
-regexTemp = r"^194 \w+\s+0x\d+\s+\d+\s+\d+\s+\d+\s+\w+\s+\w+\s+\S+\s+(\d+)(?:\s[\(][^)]*[\)])?$"
+regexTemp = r"^194 [\w-]+\s+0x\d+\s+\d+\s+\d+\s+\d+\s+[\w-]+\s+\w+\s+\S+\s+(\d+)(?:\s[\(][^)]*[\)])?$"
 regexMode = r"^(?:^Power mode is:\s+|^Device is in )(\w+)"
 
 # Parse arguments
