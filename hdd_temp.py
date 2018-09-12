@@ -24,7 +24,7 @@ from collections import OrderedDict
 
 
 # --------------- Main ----------------
-VERSION = "1.0"
+VERSION = "1.1"
 # Regex for shell commands
 regexDevices = r"^[/a-z]+"
 regexTemp = r"^194 [\w-]+\s+0x\d+\s+\d+\s+\d+\s+\d+\s+[\w-]+\s+\w+\s+\S+\s+(\d+)(?:\s[\(][^)]*[\)])?$"

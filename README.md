@@ -15,14 +15,15 @@
 # Help
 
 ``` bash
-usage: hdd_temp.py [-h] [-d DIRECTORY] [-v]
+usage: hdd_temp.py [-h] [-p PATH] [-d [DEVICES [DEVICES ...]]] [-v]
 
 Monitoring HDD and SDD temperatures
 
 optional arguments:
   -h, --help            show this help message and exit
-  -d DIRECTORY, --directory DIRECTORY
-                        Directory where the CSV file will be save
+  -p PATH, --path PATH  Path of directory where the CSV file will be save
+  -d [DEVICES [DEVICES ...]], --devices [DEVICES [DEVICES ...]]
+                        Device(s) to monitoring
   -v, --version         show program's version number and exit
 ```
 
