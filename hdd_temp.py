@@ -32,17 +32,21 @@ regexMode = r"^(?:^Power mode is:\s+|^Device is in )(\w+)"
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Monitoring HDD and SDD temperatures')
-parser.add_argument('-d', '--directory', help='Directory where the CSV file will be save', default='./')
+parser.add_argument('-p', '--path', help='Path of directory where the CSV file will be save', default='./')
+parser.add_argument('-d', '--devices', nargs='*', help='Device(s) to monitoring')
 parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
 args = parser.parse_args()
 
-if not os.path.isdir(args.directory):
+if not os.path.isdir(args.path):
     print("Directory is not valid")
     exit(5)
 
-# Find the list of all devices
-cmdDevices = os.popen("/usr/sbin/smartctl -n standby --scan").read()
-devices = re.findall(regexDevices, cmdDevices, re.MULTILINE)
+if args.devices:
+    devices = args.devices
+else:
+    # Find the list of all devices
+    cmdDevices = os.popen("/usr/sbin/smartctl -n standby --scan").read()
+    devices = re.findall(regexDevices, cmdDevices, re.MULTILINE)
 
 # Find the mode and the temperature for each device
 for device in devices:
@@ -61,10 +65,7 @@ for device in devices:
     # dateFormated = date.strftime('%d-%m-%y')
 
     csvFilename = 'hdd-temp_' + device.replace('/dev/', '') + '.csv'
-    if args.directory:
-        csvPath = args.directory + '/' + csvFilename
-    else:
-        csvPath = csvFilename
+    csvPath = args.path + '/' + csvFilename
 
     createHeader = not os.path.exists(csvPath)
 
@@ -82,4 +83,4 @@ for device in devices:
     print("Add row in " + csvPath)
 
 
-print("Found " + str(len(devices)) + " devices.")
+print("Monitor: " + str(len(devices)) + " devices.")
