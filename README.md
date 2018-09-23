@@ -9,21 +9,23 @@
 
 # Require
 
+- Python 3
 - smartmontools
 - privilege execution
 
 # Help
 
-``` bash
-usage: hdd_temp.py [-h] [-p PATH] [-d [DEVICES [DEVICES ...]]] [-v]
+``` sh
+usage: hdd_temp.py [-h] [-p PATH] [-d [DEVICES [DEVICES ...]]] [-m] [-v]
 
-Monitoring HDD and SDD temperatures
+Monitoring HDD and SDD temperatures with Python 3
 
 optional arguments:
   -h, --help            show this help message and exit
   -p PATH, --path PATH  Path of directory where the CSV file will be save
   -d [DEVICES [DEVICES ...]], --devices [DEVICES [DEVICES ...]]
                         Device(s) to monitoring
+  -m, --monthly         Split logs monthly
   -v, --version         show program's version number and exit
 ```
 
